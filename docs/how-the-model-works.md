@@ -53,12 +53,7 @@ No need for many JSON files — one fail case + one pass case is enough for the 
 
 ## Not 唐楼 — why?
 
-We switched per your **宏福苑 / 高层应急** narrative:
-
-- **唐楼** = low-rise mixed-use (shop + residential, ~6–10 storeys)
-- **Current model** = **typical high-rise residential corridor slice** (21–25/F context, active 23/F)
-
-This matches high-rise fire egress debate, not tong lau streetscape.
+We use a **typical high-rise residential corridor slice** (21–25/F context, active 23/F) based on common local building typology — not a reconstruction of any specific project.
 
 If you want **唐楼** instead, that is a different geometry (street frontage, rear stair, shop front) — say so and we can switch.
 

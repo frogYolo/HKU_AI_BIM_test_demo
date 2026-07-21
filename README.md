@@ -2,8 +2,6 @@
 
 HKU AI+BIM technical assessment prototype: **synthetic typical residential floor corridor** with two fire-egress checks.
 
-> Motivated by renewed Hong Kong debate on high-rise emergency design — **not** an incident reconstruction.
-
 ## Rules
 
 | ID | Rule | Demo failure |
@@ -27,13 +25,10 @@ python -m checker.cli data/sample_hk_tower_floor.json
 
 Blender: import `data/sample_hk_tower_floor.gltf`
 
-## Narrative for video (30 s)
+## Sample data
 
-1. HK towers rely on **corridors + fire stairs** for evacuation  
-2. Design defects (narrow doors) and **daily occupation** (strollers, cartons) both matter in emergencies  
-3. This tool runs **two deterministic checks** on synthetic data; AI explains fixes  
-
-See [`docs/design-notes.md`](docs/design-notes.md) for scope and ethical framing.
+- `data/sample_hk_tower_floor.json`: mixed result sample (**3 fail, 2 pass**)
+- `data/sample_hk_tower_floor_compliant.json`: compliant sample (**0 fail**)
 
 ## Layout
 
