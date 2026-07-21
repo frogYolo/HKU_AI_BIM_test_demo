@@ -20,6 +20,7 @@ const fileInput = document.getElementById("file-input");
 const labelsEl = document.getElementById("labels");
 const floorBadgeEl = document.getElementById("floor-badge");
 const canvasEl = document.getElementById("c");
+const explainModeEl = document.getElementById("explain-mode");
 
 const CW = 2.6;
 const CL = 22.0;
@@ -952,8 +953,36 @@ function findingFocusId(f) {
   return f.element_id;
 }
 
+function renderExplainMode(explanation) {
+  if (!explainModeEl) return;
+  const mode = explanation?.mode || "unknown";
+  explainModeEl.className = "explain-mode";
+  if (mode === "llm_agent") {
+    explainModeEl.classList.add("mode-llm");
+    const modelTag = explanation?.llm_model ? ` (${explanation.llm_model})` : "";
+    explainModeEl.textContent = `Explanation mode: llm${modelTag}`;
+    explainModeEl.title = "LLM-generated explanation from deterministic findings.";
+    return;
+  }
+  if (mode === "deterministic_agent_fallback") {
+    explainModeEl.classList.add("mode-fallback");
+    explainModeEl.textContent = "Explanation mode: deterministic fallback";
+    explainModeEl.title = explanation?.fallback_reason || "LLM unavailable; using deterministic explanation.";
+    return;
+  }
+  if (mode === "deterministic_agent") {
+    explainModeEl.textContent = "Explanation mode: deterministic";
+    explainModeEl.title = "Template-based deterministic explanation.";
+    return;
+  }
+  explainModeEl.classList.add("muted");
+  explainModeEl.textContent = `Explanation mode: ${mode}`;
+  explainModeEl.title = "";
+}
+
 function renderResult(result) {
   const { summary, findings, explanation, model } = result;
+  renderExplainMode(explanation);
   summaryEl.className = "summary";
   summaryEl.innerHTML = `
     <div class="stat fail"><b>${summary.fail}</b>fail</div>
@@ -987,6 +1016,11 @@ function renderResult(result) {
 }
 
 async function runCheck(file) {
+  if (explainModeEl) {
+    explainModeEl.className = "explain-mode muted";
+    explainModeEl.textContent = "Explanation mode: checking…";
+    explainModeEl.title = "";
+  }
   summaryEl.className = "summary muted";
   summaryEl.textContent = "Checking…";
   const res = file

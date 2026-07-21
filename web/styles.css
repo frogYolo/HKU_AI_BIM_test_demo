@@ -272,6 +272,33 @@ button:hover,
   overflow: auto;
 }
 
+.explain-mode {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f8f6f1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #000;
+}
+
+.explain-mode.muted {
+  opacity: 0.75;
+}
+
+.explain-mode.mode-llm {
+  border-color: #2f7d4a;
+  background: #edf7ef;
+}
+
+.explain-mode.mode-fallback {
+  border-color: #b7791f;
+  background: #fbf4e9;
+}
+
 .summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

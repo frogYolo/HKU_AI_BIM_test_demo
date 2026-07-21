@@ -25,6 +25,28 @@ python -m checker.cli data/sample_hk_tower_floor.json
 
 Blender: import `data/sample_hk_tower_floor.gltf`
 
+## Explanation modes
+
+Deterministic rules in `checker/rules.py` are always the source of truth for pass/fail.
+`checker/explain.py` supports two explanation modes:
+
+- `deterministic` (default): template-style deterministic narration
+- `llm`: LLM-generated narrative/actions based on deterministic findings
+
+Configure with environment variables:
+
+```bash
+# default mode (stable/offline)
+EXPLAIN_MODE=deterministic
+
+# optional LLM mode
+EXPLAIN_MODE=llm
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-4o-mini
+```
+
+If LLM mode fails (missing key/package/API error), the app automatically falls back to deterministic explanation.
+
 ## Sample data
 
 - `data/sample_hk_tower_floor.json`: mixed result sample (**3 fail, 2 pass**)
