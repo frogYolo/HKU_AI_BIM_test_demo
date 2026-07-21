@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "name": "Synthetic HK Tower Floor — Compliant variant",
+    "space_type": "hk_residential_corridor",
+    "source": "scripts/generate_sample_hk_tower_floor.py",
+    "units": {
+      "length": "meter",
+      "door_width": "millimeter"
+    },
+    "formats": [
+      "json",
+      "gltf",
+      "ifc"
+    ],
+    "rules_targeted": [
+      "R1 fire stair door clear_width_mm >= 900",
+      "R2 obstructions must not intersect stair landing clear zones"
+    ],
+    "motivation": "Preventive micro-prototype inspired by renewed Hong Kong debate on high-rise residential emergency design and corridor occupation — synthetic geometry only, not any real building or incident reconstruction.",
+    "disclaimer": "Academic demo. Not based on proprietary or incident-specific data.",
+    "rule_config": {
+      "exit_clear_width_mm_min": 900,
+      "width_semantics": "clear_width_mm",
+      "width_semantics_note": "Explicit net clear width in JSON — not IfcDoor.OverallWidth without review. Production path: map Pset_DoorCommon / local parameter with gross-to-clear deduction.",
+      "jurisdiction_note": "900 mm is a demo floor for the test. Primary tower exits may require 1100–1200 mm under project-specific fire engineering — change exit_clear_width_mm_min in JSON."
+    }
+  },
+  "building": {
+    "id": "B-HK-T01",
+    "name": "Typical Tower — 23/F Corridor",
+    "storey": "23/F",
+    "footprint_m": {
+      "width": 2.6,
+      "depth": 22.0,
+      "height": 2.85
+    }
+  },
+  "doors": [
+    {
+      "id": "D-STAIR-A",
+      "name": "Fire Stair A (near lift lobby)",
+      "is_exit": true,
+      "clear_width_mm": 1100,
+      "height_mm": 2100,
+      "axis": "z",
+      "location": {
+        "x": 2.6,
+        "y": 3.5
+      },
+      "notes": "Compliant fire-rated stair door"
+    },
+    {
+      "id": "D-STAIR-B",
+      "name": "Fire Stair B (remote end)",
+      "is_exit": true,
+      "clear_width_mm": 1100,
+      "height_mm": 2100,
+      "axis": "z",
+      "location": {
+        "x": 2.6,
+        "y": 20.5
+      },
+      "notes": "Upgraded to compliant width"
+    }
+  ],
+  "egress_zones": [
+    {
+      "id": "EZ-STAIR-A",
+      "door_id": "D-STAIR-A",
+      "name": "Stair A landing clear zone",
+      "aabb": {
+        "min": [
+          1.075,
+          2.75
+        ],
+        "max": [
+          2.425,
+          4.25
+        ]
+      }
+    },
+    {
+      "id": "EZ-STAIR-B",
+      "door_id": "D-STAIR-B",
+      "name": "Stair B landing clear zone",
+      "aabb": {
+        "min": [
+          1.0,
+          19.474999999999998
+        ],
+        "max": [
+          2.5,
+          20.925
+        ]
+      }
+    }
+  ],
+  "furniture": []
+}

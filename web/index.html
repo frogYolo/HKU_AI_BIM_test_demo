@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HK Tower Corridor Egress Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div>
+        <p class="eyebrow">HKU AI+BIM technical demo</p>
+        <h1>HK tower corridor egress check</h1>
+        <p class="sub" id="rule-desc">Loading rules…</p>
+      </div>
+      <div class="actions">
+        <button id="btn-overview" type="button" class="btn-secondary">Full Tower View</button>
+        <button id="btn-floor" type="button">Focus 23/F</button>
+        <button id="btn-sample" type="button">Run check</button>
+        <label class="file-btn">
+          Upload JSON
+          <input id="file-input" type="file" accept="application/json,.json" hidden />
+        </label>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="viewport" aria-label="3D model">
+        <canvas id="c"></canvas>
+        <div id="labels"></div>
+        <div class="floor-badge" id="floor-badge">23/F inspection floor · click a floor or fail item to focus</div>
+        <div id="floor-nav" class="floor-nav" aria-label="Floor navigation"></div>
+        <div class="view-hint">Drag to rotate · wheel to zoom · right-drag to pan · unlimited angle</div>
+        <div class="legend">
+          <span><i class="swatch ok"></i> OK</span>
+          <span><i class="swatch fail"></i> Door fail</span>
+          <span><i class="swatch warn"></i> Blocked</span>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div id="summary" class="summary muted">Run a check to see results.</div>
+        <div id="narrative" class="narrative"></div>
+        <h2>Findings · click to locate</h2>
+        <ul id="findings" class="findings"></ul>
+        <h2>Suggested actions</h2>
+        <ol id="actions" class="actions-list"></ol>
+      </aside>
+    </main>
+  </div>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
