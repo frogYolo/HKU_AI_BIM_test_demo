@@ -55,18 +55,70 @@ let envMap = null;
 
 const controls = new OrbitControls(camera, canvasEl);
 controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.minDistance = 1.5;
-controls.maxDistance = 220;
+controls.dampingFactor = 0.12;
 controls.maxPolarAngle = Math.PI;
 controls.minPolarAngle = 0;
 controls.enablePan = true;
-controls.zoomSpeed = 1.35;
-controls.rotateSpeed = 0.85;
-controls.panSpeed = 1.1;
+controls.enableZoom = false; // custom linear wheel zoom below — OrbitControls zoom feels exponential/floaty
+controls.rotateSpeed = 0.55;
+controls.panSpeed = 0.7;
+controls.screenSpacePanning = true;
 controls.update();
 
-canvasEl.addEventListener("pointerdown", () => { flyAnim = null; });
+let orbitMode = "overview";
+let zoomStep = 2.0;
+
+/** Keep zoom gentle in corridor detail; only allow far pullback in overview. */
+function setOrbitLimits(mode = "overview") {
+  orbitMode = mode;
+  if (mode === "detail") {
+    controls.minDistance = 1.4;
+    controls.maxDistance = 8;
+    zoomStep = 0.28;
+  } else if (mode === "floor") {
+    controls.minDistance = 2.5;
+    controls.maxDistance = 22;
+    zoomStep = 0.55;
+  } else {
+    controls.minDistance = 12;
+    controls.maxDistance = 160;
+    zoomStep = 2.2;
+  }
+}
+setOrbitLimits("overview");
+
+function stopFlyAnim() {
+  flyAnim = null;
+}
+
+function applyLinearZoom(deltaY) {
+  stopFlyAnim();
+  const direction = Math.sign(deltaY);
+  if (!direction) return;
+  const offset = camera.position.clone().sub(controls.target);
+  const distance = offset.length();
+  if (distance < 1e-4) return;
+  const next = THREE.MathUtils.clamp(
+    distance + direction * zoomStep,
+    controls.minDistance,
+    controls.maxDistance
+  );
+  offset.setLength(next);
+  camera.position.copy(controls.target).add(offset);
+  controls.update();
+}
+
+canvasEl.addEventListener("pointerdown", stopFlyAnim);
+canvasEl.addEventListener(
+  "wheel",
+  (event) => {
+    event.preventDefault();
+    // Normalize mouse / trackpad: take one step per event for stability
+    applyLinearZoom(event.deltaY);
+  },
+  { passive: false }
+);
+canvasEl.addEventListener("touchstart", stopFlyAnim, { passive: true });
 
 scene.add(new THREE.HemisphereLight(0xf4f8ff, 0x6a7868, 0.42));
 const key = new THREE.DirectionalLight(0xfffaf4, 0.92);
@@ -773,6 +825,7 @@ function jumpToFloor(floor) {
   const endPos = floor === ACTIVE
     ? new THREE.Vector3(TOWER_CX + 5, y + 2.4, TOWER_CZ - CL / 2 - 7)
     : new THREE.Vector3(TOWER_CX + 28, y + 18, TOWER_CZ + 38);
+  setOrbitLimits(floor === ACTIVE ? "floor" : "overview");
   flyAnim = {
     t0: performance.now(),
     duration: floor === ACTIVE ? 1000 : 850,
@@ -830,6 +883,7 @@ function setOverviewCamera(animateFly = true) {
   const midY = floorY(TOTAL_FLOORS) * 0.48 + WH * 0.3;
   const endTarget = new THREE.Vector3(TOWER_CX, midY, TOWER_CZ);
   const endPos = new THREE.Vector3(TOWER_CX + 52, midY + 36, TOWER_CZ + 68);
+  setOrbitLimits("overview");
   if (animateFly) {
     flyAnim = { t0: performance.now(), duration: 1200, startPos: camera.position.clone(), endPos, startTarget: controls.target.clone(), endTarget };
   } else {
@@ -837,6 +891,7 @@ function setOverviewCamera(animateFly = true) {
     controls.target.copy(endTarget);
     controls.update();
   }
+  focusedId = null;
   floorBadgeEl.textContent = "23/F inspection floor · full tower in ground-level city context";
 }
 
@@ -863,8 +918,10 @@ function focusCamera(id, duration = 900) {
   if (id === "FLOOR-23") {
     endTarget = pos.clone();
     endPos = pos.clone().add(new THREE.Vector3(12, 8, 18));
+    setOrbitLimits("floor");
   } else {
     ({ endPos, endTarget } = corridorFocusView(pos));
+    setOrbitLimits("detail");
   }
   flyAnim = {
     t0: performance.now(),
