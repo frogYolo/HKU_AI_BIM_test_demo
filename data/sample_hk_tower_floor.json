@@ -22,7 +22,7 @@
       "exit_clear_width_mm_min": 900,
       "width_semantics": "clear_width_mm",
       "width_semantics_note": "Explicit net clear width in JSON — not IfcDoor.OverallWidth without review. Production path: map Pset_DoorCommon / local parameter with gross-to-clear deduction.",
-      "jurisdiction_note": "900 mm is a demo floor for the test. Primary tower exits may require 1100–1200 mm under project-specific fire engineering — change exit_clear_width_mm_min in JSON."
+      "jurisdiction_note": "900 mm is the default demo threshold. Primary tower exits may require 1100–1200 mm under project-specific fire engineering — change exit_clear_width_mm_min in JSON."
     }
   },
   "building": {

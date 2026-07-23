@@ -326,7 +326,7 @@ def build_semantic_model() -> dict:
                     "Production path: map Pset_DoorCommon / local parameter with gross-to-clear deduction."
                 ),
                 "jurisdiction_note": (
-                    "900 mm is a demo floor for the test. Primary tower exits may require 1100–1200 mm "
+                    "900 mm is the default demo threshold. Primary tower exits may require 1100–1200 mm "
                     "under project-specific fire engineering — change exit_clear_width_mm_min in JSON."
                 ),
             },
