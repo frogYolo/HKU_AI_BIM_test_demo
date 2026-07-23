@@ -16,8 +16,9 @@ def main() -> None:
     path = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "data" / "sample_hk_tower_floor.json"
     model = json.loads(path.read_text(encoding="utf-8"))
     result = run_checks(model).to_dict()
-    result["explanation"] = explain_findings(result)
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    result["explanation"] = explain_findings(result, model=model)
+    # Windows consoles may be GBK; ASCII-safe dump keeps CLI usable without UTF-8 setup.
+    print(json.dumps(result, indent=2, ensure_ascii=True))
 
 
 if __name__ == "__main__":

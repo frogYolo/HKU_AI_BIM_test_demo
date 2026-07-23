@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+PROMPTS = ROOT / "prompts"
+SYSTEM_PROMPT_PATH = PROMPTS / "compliance_agent_system.md"
+USER_PROMPT_PATH = PROMPTS / "compliance_agent_user.md"
 
 
 def _default_human_ai_loop() -> list[str]:
@@ -12,6 +18,28 @@ def _default_human_ai_loop() -> list[str]:
         "Agent explains findings for managers / designers.",
         "Human validates on site and updates the model or building management practice.",
     ]
+
+
+def _load_prompt(path: Path) -> str:
+    if not path.is_file():
+        raise FileNotFoundError(f"Prompt file missing: {path}")
+    return path.read_text(encoding="utf-8").strip()
+
+
+def _render_user_prompt(model: dict[str, Any] | None, result: dict[str, Any]) -> str:
+    """Fill prompts/compliance_agent_user.md placeholders from the live check."""
+    template = _load_prompt(USER_PROMPT_PATH)
+    # Keep the LLM payload lean: findings only, no nested explanation.
+    check_payload = {
+        "summary": result.get("summary", {}),
+        "findings": result.get("findings", []),
+        "meta": result.get("meta", {}),
+    }
+    model_payload = model if model is not None else {}
+    return (
+        template.replace("{{MODEL_JSON}}", json.dumps(model_payload, ensure_ascii=False, indent=2))
+        .replace("{{CHECK_RESULT_JSON}}", json.dumps(check_payload, ensure_ascii=False, indent=2))
+    )
 
 
 def _deterministic_explanation(result: dict[str, Any]) -> dict[str, Any]:
@@ -54,7 +82,9 @@ def _deterministic_explanation(result: dict[str, Any]) -> dict[str, Any]:
     if not fails:
         narrative = "All checked egress items pass this demo rule set."
     else:
-        blocked_zone_ids = sorted({f.get("measured", {}).get("egress_zone_id", "stair landing zone") for f in r2_fails})
+        blocked_zone_ids = sorted(
+            {f.get("measured", {}).get("egress_zone_id", "stair landing zone") for f in r2_fails}
+        )
         blocked_items = len(r2_fails)
         narrow_doors = len(r1_fails)
         door_details = []
@@ -69,11 +99,17 @@ def _deterministic_explanation(result: dict[str, Any]) -> dict[str, Any]:
             else "No R2 landing obstructions were detected."
         )
         if narrow_doors:
-            narrative += f" Also found {narrow_doors} undersized fire stair door(s) (R1): " + ", ".join(door_details) + "."
+            narrative += (
+                f" Also found {narrow_doors} undersized fire stair door(s) (R1): "
+                + ", ".join(door_details)
+                + "."
+            )
         else:
             narrative += " Fire stair door widths meet the R1 threshold for this demo."
         if warns:
-            narrative += f" Additionally, {len(warns)} warning(s) were reported (non-blocking under this demo set)."
+            narrative += (
+                f" Additionally, {len(warns)} warning(s) were reported (non-blocking under this demo set)."
+            )
 
     human_follow_up: list[str] = []
     if r2_fails:
@@ -92,10 +128,15 @@ def _deterministic_explanation(result: dict[str, Any]) -> dict[str, Any]:
         "recommended_actions": actions,
         "human_ai_loop": _default_human_ai_loop(),
         "human_follow_up": human_follow_up,
+        "prompt_files": {
+            "system": str(SYSTEM_PROMPT_PATH.relative_to(ROOT)),
+            "user": str(USER_PROMPT_PATH.relative_to(ROOT)),
+            "used_by": "llm mode only; deterministic mode uses templates in explain.py",
+        },
     }
 
 
-def _llm_explanation(result: dict[str, Any]) -> dict[str, Any]:
+def _llm_explanation(result: dict[str, Any], model: dict[str, Any] | None = None) -> dict[str, Any]:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set")
@@ -105,27 +146,13 @@ def _llm_explanation(result: dict[str, Any]) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         raise RuntimeError("openai package is not installed") from exc
 
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
-
-    system_prompt = (
-        "You are a BIM fire-egress explanation assistant. "
-        "The compliance verdicts are deterministic and already decided. "
-        "Do not invent or alter findings/severity/rules. "
-        "Return only a JSON object with keys: narrative, recommended_actions, human_follow_up."
-    )
-    user_prompt = (
-        "Analyze the deterministic check result below and explain it in concise professional language.\n"
-        "Priority: blocked stair landing clashes (R2) first, then undersized stair doors (R1).\n"
-        "Constraints:\n"
-        "- narrative <= 80 words\n"
-        "- recommended_actions: one concise action per fail item\n"
-        "- human_follow_up: max 2 practical questions\n\n"
-        f"CHECK_RESULT_JSON:\n{json.dumps(result, ensure_ascii=False)}"
-    )
+    llm_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
+    system_prompt = _load_prompt(SYSTEM_PROMPT_PATH)
+    user_prompt = _render_user_prompt(model, result)
 
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model=model,
+        model=llm_model,
         temperature=0.2,
         response_format={"type": "json_object"},
         messages=[
@@ -159,11 +186,18 @@ def _llm_explanation(result: dict[str, Any]) -> dict[str, Any]:
         "recommended_actions": recommended_actions,
         "human_ai_loop": _default_human_ai_loop(),
         "human_follow_up": human_follow_up,
-        "llm_model": model,
+        "llm_model": llm_model,
+        "prompt_files": {
+            "system": str(SYSTEM_PROMPT_PATH.relative_to(ROOT)),
+            "user": str(USER_PROMPT_PATH.relative_to(ROOT)),
+        },
     }
 
 
-def explain_findings(result: dict[str, Any]) -> dict[str, Any]:
+def explain_findings(
+    result: dict[str, Any],
+    model: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     mode = os.getenv("EXPLAIN_MODE", "deterministic").strip().lower()
     deterministic = _deterministic_explanation(result)
 
@@ -174,7 +208,7 @@ def explain_findings(result: dict[str, Any]) -> dict[str, Any]:
         return deterministic
 
     try:
-        return _llm_explanation(result)
+        return _llm_explanation(result, model=model)
     except Exception as exc:  # noqa: BLE001
         fallback = dict(deterministic)
         fallback["mode"] = "deterministic_agent_fallback"

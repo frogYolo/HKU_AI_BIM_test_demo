@@ -38,7 +38,7 @@ def sample_model():
 def check_sample_get():
     model = sample_model()
     result = run_checks(model).to_dict()
-    result["explanation"] = explain_findings(result)
+    result["explanation"] = explain_findings(result, model=model)
     result["model"] = model
     return result
 
@@ -55,7 +55,7 @@ async def check_model(file: UploadFile | None = File(None)):
         model = sample_model()
 
     result = run_checks(model).to_dict()
-    result["explanation"] = explain_findings(result)
+    result["explanation"] = explain_findings(result, model=model)
     result["model"] = model
     return result
 

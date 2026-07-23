@@ -11,7 +11,8 @@ scripts/generate_sample_hk_tower_floor.py
 ```
 
 **Pass/fail comes only from JSON + `checker/rules.py`.**  
-The glTF is for communication; it does not decide compliance.
+The glTF is for communication; it does not decide compliance.  
+`checker/ifc_adapter.py` can merge `IfcDoor.OverallWidth` into the JSON `doors[]` schema (stub, no ifcopenshell).
 
 ## JSON structure (what you edit for tests)
 
@@ -27,14 +28,12 @@ The glTF is for communication; it does not decide compliance.
 - **R1** `_check_exit_door_width()` — reads `doors[].clear_width_mm`
 - **R2** `_check_egress_clashes()` — compares `furniture[].aabb` vs `egress_zones[].aabb`
 
-## Test JSON files (how many?)
-
-You only need **two**:
+## Sample JSON files
 
 | File | Purpose |
 |------|---------|
 | `sample_hk_tower_floor.json` | Main demo — **3 fails** |
-| `sample_hk_tower_floor_compliant.json` | Upload test — **all pass** |
+| `sample_hk_tower_floor_compliant.json` | Upload / comparison — **all pass** |
 
 Regenerate both:
 
@@ -47,22 +46,18 @@ Verify:
 ```bash
 python -m checker.cli data/sample_hk_tower_floor.json
 python -m checker.cli data/sample_hk_tower_floor_compliant.json
+python -m pytest -q
 ```
 
-No need for many JSON files — one fail case + one pass case is enough for the video.
+## Building typology
 
-## Not 唐楼 — why?
-
-We use a **typical high-rise residential corridor slice** (21–25/F context, active 23/F) based on common local building typology — not a reconstruction of any specific project.
-
-If you want **唐楼** instead, that is a different geometry (street frontage, rear stair, shop front) — say so and we can switch.
+The sample is a **typical high-rise residential corridor slice** (21–25/F context, active 23/F), not a reconstruction of any specific project.
 
 ## Fix "Sample missing" error in browser
 
-Your screenshot shows the **old server** still looking for `sample_classroom.py`. Restart:
+From the repository root:
 
 ```bash
-cd d:\Cursor\hku-ai-bim-compliance-check
 python scripts/generate_sample_hk_tower_floor.py
 python -m uvicorn app:app --reload --port 8000
 ```

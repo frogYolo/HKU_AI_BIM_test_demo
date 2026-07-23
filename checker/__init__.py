@@ -1,4 +1,4 @@
-"""Compliance rule engine for the demo office model."""
+"""Compliance rule engine for the HK corridor egress demo."""
 
 from .rules import CheckResult, run_checks
 

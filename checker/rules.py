@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 
+# Default demo threshold; overridden by model.meta.rule_config.exit_clear_width_mm_min
 EXIT_CLEAR_WIDTH_MM = 900
 
 
@@ -48,9 +49,6 @@ def _overlap_area(a: dict[str, Any], b: dict[str, Any]) -> float:
     z0 = max(a["min"][1], b["min"][1])
     z1 = min(a["max"][1], b["max"][1])
     return max(0.0, x1 - x0) * max(0.0, z1 - z0)
-
-
-EXIT_CLEAR_WIDTH_MM = 900  # default; overridden by model.meta.rule_config
 
 
 def get_rule_config(model: dict[str, Any]) -> dict[str, Any]:

@@ -1,6 +1,6 @@
-# Limitations & scope (honest defence for reviewers)
+# Limitations & scope
 
-This is a **7-day HKU AI+BIM micro-prototype**, not a production BIM Check Platform.
+This is a scoped egress micro-prototype, not a production BIM check platform.
 
 ## What we claim
 
@@ -11,54 +11,34 @@ This is a **7-day HKU AI+BIM micro-prototype**, not a production BIM Check Platf
 | Configurable threshold | `meta.rule_config.exit_clear_width_mm_min` in JSON |
 | Clear width semantics | Field `clear_width_mm` documented; not confused with gross opening |
 | Human–AI loop | Rules = truth; `explain.py` + `prompts/` = narration |
-| IFC awareness | Minimal `sample_hk_tower_floor.ifc`; JSON is check source for demo |
+| IFC awareness | Minimal `sample_hk_tower_floor.ifc` + `checker/ifc_adapter.py` (OverallWidth→JSON); JSON remains check source |
 
-## Red-team critique → response
+## Scope notes
 
-### “Only sterile synthetic data”
+### Synthetic data
 
-**Fair for production. Expected for this test.**
+Expected for a micro-prototype. The repo ships a **stub** `checker/ifc_adapter.py` (STEP parse of `IfcDoor.OverallWidth`) that fills the same JSON schema. A fuller path would use ifcopenshell plus project property-set mapping. This is **not** production-ready on messy Revit/IFC exports.
 
-Task brief allows JSON / generated samples. We document IFC mapping and state that **next step = ifcopenshell adapter** to populate the same JSON schema from real exports. We do **not** claim production readiness on messy Revit/IFC without an adapter layer.
+### Geometry depth
 
-### “Tagging not geometry”
+R2 is **not** a boolean tag on the zone. It computes **2D AABB intersection** between `furniture[].aabb` and `egress_zones[].aabb` and reports overlap m². That is a simplified geometric check — not full 3D solid clash.
 
-**Partially unfair.**
+### Thresholds
 
-R2 is **not** a boolean tag on the zone. It computes **2D AABB intersection** between `furniture[].aabb` and `egress_zones[].aabb` and reports overlap m². That is a simplified geometric check — not full 3D BREP clash. We say so explicitly.
+900 mm is a **demo default**, not a claim about full fire-code compliance. Threshold lives in `meta.rule_config` and can be set per project (e.g. 1200 mm for primary exits).
 
-Full IFC solid–solid clash is out of scope for 1–2 rules in 7 days.
+### Clear vs gross width
 
-### “900 mm is wrong for HK tower”
+JSON uses explicit `clear_width_mm`. Production IFC import would need property mapping (see `rule_config.width_semantics_note`). This demo shows the **check logic** once semantics are resolved.
 
-**Fair that real projects vary.**
+### Spatial context
 
-900 mm is a **demo default**, not a claim about full HK fire code compliance. Threshold lives in `meta.rule_config` and can be set to 1200 mm for primary exits. Video/README should say: *human sets criteria per project*.
+The viewer shows a typical floor corridor slice inside a multi-storey shell (21–25/F). Checking is floor-local by design.
 
-### “Clear vs gross width”
+### AI role
 
-**Fair for IFC auto-import.**
+Rules engine is in Python; thresholds are in JSON. AI (`prompts/` + optional LLM mode) explains findings — it does **not** invent or override pass/fail.
 
-JSON uses explicit `clear_width_mm`. Production would need property mapping rules (documented in `rule_config.width_semantics_note`). This demo shows the **check logic** once semantics are resolved — not the full IFC property resolver.
+## Summary
 
-### “Contextless 3D island”
-
-**Partially fair.**
-
-We show a **typical floor corridor slice** inside a multi-storey shell (21–25/F). Checking is floor-local by design. Room linkage = flat doors `Flat-01…06` on west side; extend with `IfcSpace` relations in v2.
-
-### “Report not actionable”
-
-**Partially unfair.**
-
-`explain.py` returns `recommended_actions` (widen door X, remove stroller Y from zone Z). UI lists them under **Suggested actions**. If fails show without actions, check API response / refresh cache.
-
-### “Hardcoded rules / fake AI”
-
-**Partially fair on UI copy.**
-
-Rules engine is in Python, threshold in JSON. AI role = **research + explanation** (prompts in repo), not LLM-as-judge. Title “AI+BIM” matches task wording (“AI-native learning”, “prompts in GitHub”) — we do not claim GPT runs the compliance verdict.
-
-## One sentence for the video
-
-> “This is a scoped egress micro-prototype: configurable deterministic rules on explicit semantics, plan geometry for landing clash, and an AI layer for explanation — with a documented path to IFC import, not a claim of full code compliance.”
+Configurable deterministic rules on explicit semantics, plan geometry for landing clash, and an explanation layer — with a documented IFC door-width import stub, not a claim of full code compliance.
